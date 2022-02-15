@@ -44,5 +44,6 @@ int main(int argc, char const *argv[]) {
       }
     } while (1);
 
+    sem_close(&mutex);
     pthread_exit(NULL);
 }
