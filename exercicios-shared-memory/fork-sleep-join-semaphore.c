@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-sem_t mutex;
+sem_t mutex, locker;
 int threadsCount;
 
 void *daugtherExec(void *threadid) {
@@ -16,6 +16,10 @@ void *daugtherExec(void *threadid) {
     sleep(tempoDeDormida);
     threadsCount--;
     
+    if (threadsCount == 0) {
+      sem_post(&locker);
+    }
+
     sem_post(&mutex);
     
     return NULL;
@@ -29,6 +33,7 @@ int main(int argc, char const *argv[]) {
     printf("------------------------------------------------------------\n");
 
     sem_init(&mutex, 0, 1);
+    sem_init(&locker, 0, 0);
     threadsCount = num_threads;
     pthread_t threads[num_threads];
 
@@ -36,14 +41,12 @@ int main(int argc, char const *argv[]) {
       pthread_create(&threads[i], NULL, daugtherExec, (void *)i);
     }
 
-    do {
-      if (threadsCount == 0) {
-        printf("------------------------------------------------------------\n");
-        printf("\nn: %i\n", num_threads);
-        break;
-      }
-    } while (1);
+    sem_wait(&locker);
+
+    printf("------------------------------------------------------------\n");
+    printf("\nn: %i\n", num_threads);
 
     sem_close(&mutex);
+    sem_close(&locker);
     pthread_exit(NULL);
 }
